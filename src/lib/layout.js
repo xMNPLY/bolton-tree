@@ -1,13 +1,20 @@
-export const NODE_W = 218
-export const NODE_H = 64
-export const COUPLE_GAP = 26
+export const SIZE_BANDS = {
+  detailed: { key: "detailed", NODE_W: 218, NODE_H: 64, COUPLE_GAP: 26, ROW: 148, GAP: 24, SEG_W: 462 },
+  medium: { key: "medium", NODE_W: 150, NODE_H: 44, COUPLE_GAP: 18, ROW: 96, GAP: 18, SEG_W: 318 },
+  compact: { key: "compact", NODE_W: 92, NODE_H: 26, COUPLE_GAP: 10, ROW: 52, GAP: 12, SEG_W: 194 },
+}
 
-const ROW = NODE_H + 84
-const GAP = 24
-const ROOT_GAP = 80
-const SEG_W = NODE_W * 2 + COUPLE_GAP
+export function bandForZoom(k) {
+  if (k >= 0.55) return SIZE_BANDS.detailed
+  if (k >= 0.25) return SIZE_BANDS.medium
+  return SIZE_BANDS.compact
+}
 
-export function buildFamilyStructure(individuals, families) {
+export const NODE_W = SIZE_BANDS.detailed.NODE_W
+export const NODE_H = SIZE_BANDS.detailed.NODE_H
+export const COUPLE_GAP = SIZE_BANDS.detailed.COUPLE_GAP
+
+export function buildFamilyStructure(individuals, families, s = SIZE_BANDS.detailed) {
   const coupleUnits = new Map()
   const singleUnits = new Map()
   const multiUnits = new Map()
@@ -33,7 +40,7 @@ export function buildFamilyStructure(individuals, families) {
         marriages: [],
         x: 0,
         y: 0,
-        w: NODE_W,
+        w: s.NODE_W,
       })
     }
     return singleUnits.get(id)
@@ -50,7 +57,7 @@ export function buildFamilyStructure(individuals, families) {
         if (!fam) continue
         const spouseId = fam.husband === p.id ? fam.wife : fam.husband
         const spouse = person(spouseId)
-        if (spouse && !spouses.some((s) => s.id === spouse.id)) spouses.push(spouse)
+        if (spouse && !spouses.some((x) => x.id === spouse.id)) spouses.push(spouse)
         marriages.push({
           spouse: spouse || null,
           children: fam.children.map((id) => person(id)).filter(Boolean),
@@ -67,7 +74,7 @@ export function buildFamilyStructure(individuals, families) {
         marriages,
         x: 0,
         y: 0,
-        w: NODE_W + spouses.length * (NODE_W + COUPLE_GAP),
+        w: s.NODE_W + spouses.length * (s.NODE_W + s.COUPLE_GAP),
       })
     }
     return multiUnits.get(anchorId)
@@ -90,7 +97,7 @@ export function buildFamilyStructure(individuals, families) {
         marriages: [{ spouse: null, children: fam.children.map((id) => person(id)).filter(Boolean) }],
         x: 0,
         y: 0,
-        w: hu && wi ? SEG_W : NODE_W,
+        w: hu && wi ? s.SEG_W : s.NODE_W,
       })
     }
     return coupleUnits.get(fam.id)
@@ -123,7 +130,7 @@ export function buildFamilyStructure(individuals, families) {
       if (u.wife) ids.push(u.wife.id)
     } else if (u.kind === "multi") {
       ids.push(u.anchor.id)
-      u.spouses.forEach((s) => ids.push(s.id))
+      u.spouses.forEach((x) => ids.push(x.id))
     } else {
       ids.push(u.person.id)
     }
@@ -191,28 +198,31 @@ export function buildFamilyStructure(individuals, families) {
   return { units: allUnits, byPerson, byKey, kidsOf, upGroupsOf, hasChildren, hasUpGroups }
 }
 
-export function memberCardX(unit, memberId) {
+export function memberCardX(unit, memberId, s = SIZE_BANDS.detailed) {
   if (unit.kind === "couple") {
-    if (unit.husband?.id === memberId) return unit.x + NODE_W / 2
-    if (unit.wife?.id === memberId) return unit.x + NODE_W + COUPLE_GAP + NODE_W / 2
+    if (unit.husband?.id === memberId) return unit.x + s.NODE_W / 2
+    if (unit.wife?.id === memberId) return unit.x + s.NODE_W + s.COUPLE_GAP + s.NODE_W / 2
   } else if (unit.kind === "multi") {
-    if (unit.anchor?.id === memberId) return unit.x + NODE_W / 2
-    const idx = unit.spouses.findIndex((s) => s.id === memberId)
-    if (idx >= 0) return unit.x + NODE_W + COUPLE_GAP + idx * (NODE_W + COUPLE_GAP) + NODE_W / 2
+    if (unit.anchor?.id === memberId) return unit.x + s.NODE_W / 2
+    const idx = unit.spouses.findIndex((x) => x.id === memberId)
+    if (idx >= 0) return unit.x + s.NODE_W + s.COUPLE_GAP + idx * (s.NODE_W + s.COUPLE_GAP) + s.NODE_W / 2
   }
   return unit.x + unit.w / 2
 }
 
-export function segmentX(unit, spouse) {
+export function segmentX(unit, spouse, s = SIZE_BANDS.detailed) {
   if (!spouse || unit.kind !== "multi") return unit.x + unit.w / 2
-  const idx = unit.spouses.findIndex((s) => s.id === spouse.id)
-  const anchorCx = unit.x + NODE_W / 2
-  const spouseCx = unit.x + NODE_W + COUPLE_GAP + idx * (NODE_W + COUPLE_GAP) + NODE_W / 2
+  const idx = unit.spouses.findIndex((x) => x.id === spouse.id)
+  const anchorCx = unit.x + s.NODE_W / 2
+  const spouseCx = unit.x + s.NODE_W + s.COUPLE_GAP + idx * (s.NODE_W + s.COUPLE_GAP) + s.NODE_W / 2
   return (anchorCx + spouseCx) / 2
 }
 
-export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapsed) {
+export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapsed, s = SIZE_BANDS.detailed) {
   const { byPerson, byKey, kidsOf, upGroupsOf, hasChildren, hasUpGroups } = structure
+  const { ROW, GAP, SEG_W } = s
+  const ROOT_GAP = GAP * 3
+
   const home = byPerson.get(homeId) || structure.units[0]
   if (!home) {
     return { units: [], edges: [], upEdges: [], secondaryUpEdges: [], width: 300, height: 200 }
@@ -269,7 +279,7 @@ export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapse
         if (upCollapsed.has(`up:${unit.key}:${group.memberId}`)) continue
         const parents = group.parents.filter((p) => visible.has(p.key))
         if (parents.length === 0) continue
-        const gw = parents.reduce((s, p) => s + upW(p), 0) + GAP * (parents.length - 1)
+        const gw = parents.reduce((sum, p) => sum + upW(p), 0) + GAP * (parents.length - 1)
         span = first ? gw : span + gw + GAP
         first = false
       }
@@ -277,6 +287,34 @@ export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapse
     }
     upWCache.set(unit.key, w)
     return w
+  }
+
+  function downGroupPlacement(unit, shiftEnabled) {
+    const groups = []
+    for (const group of kidsOf.get(unit.key)) {
+      const kids = group.kids.filter((k) => visible.has(k.key))
+      if (kids.length === 0) continue
+      const kidsTotal = kids.reduce((sum, k) => sum + downW(k), 0) + GAP * (kids.length - 1)
+      const gw = Math.max(SEG_W, kidsTotal)
+      groups.push({ group, kids, gw, kidsTotal })
+    }
+    if (groups.length === 0) return { positions: [], span: unit.w }
+
+    const segXs = groups.map((g) => segmentX(unit, g.group.spouse, s))
+    let shift = 0
+    const positions = []
+    for (let i = 0; i < groups.length; i++) {
+      const ideal = segXs[i] - groups[i].gw / 2
+      const start = Math.max(ideal, i === 0 ? -Infinity : positions[i - 1] + groups[i - 1].gw + GAP)
+      positions.push(start)
+    }
+
+    const span = positions[positions.length - 1] + groups[groups.length - 1].gw - positions[0]
+    const left = positions[0]
+    if (shiftEnabled) {
+      shift = unit.x + unit.w / 2 - (left + span / 2)
+    }
+    return { positions: positions.map((p) => p + shift), shift, span }
   }
 
   function downW(unit) {
@@ -290,42 +328,14 @@ export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapse
     return w
   }
 
-  function downGroupPlacement(unit, shiftEnabled) {
-    const groups = []
-    for (const group of kidsOf.get(unit.key)) {
-      const kids = group.kids.filter((k) => visible.has(k.key))
-      if (kids.length === 0) continue
-      const kidsTotal = kids.reduce((s, k) => s + downW(k), 0) + GAP * (kids.length - 1)
-      const gw = Math.max(SEG_W, kidsTotal)
-      groups.push({ group, kids, gw, kidsTotal })
-    }
-    if (groups.length === 0) return { positions: [], span: unit.w }
-
-    const segXs = groups.map((g) => segmentX(unit, g.group.spouse))
-    let shift = 0
-    const positions = []
-    for (let i = 0; i < groups.length; i++) {
-      const ideal = segXs[i] - groups[i].gw / 2
-      const start = Math.max(ideal, i === 0 ? -Infinity : positions[i - 1] + groups[i - 1].gw + GAP)
-      positions.push(start)
-    }
-
-    let span = positions[positions.length - 1] + groups[groups.length - 1].gw - positions[0]
-    const left = positions[0]
-    if (shiftEnabled) {
-      shift = unit.x + unit.w / 2 - (left + span / 2)
-    }
-    return { positions: positions.map((p) => p + shift), shift, span }
-  }
-
   function upGroupPlacement(unit) {
     const groups = []
     for (const group of upGroupsOf.get(unit.key)) {
       if (upCollapsed.has(`up:${unit.key}:${group.memberId}`)) continue
       const parents = group.parents.filter((p) => visible.has(p.key))
       if (parents.length === 0) continue
-      const gw = parents.reduce((s, p) => s + upW(p), 0) + GAP * (parents.length - 1)
-      groups.push({ group, parents, gw, cx: memberCardX(unit, group.memberId) })
+      const gw = parents.reduce((sum, p) => sum + upW(p), 0) + GAP * (parents.length - 1)
+      groups.push({ group, parents, gw, cx: memberCardX(unit, group.memberId, s) })
     }
     if (groups.length === 0) return { placements: [], span: 0 }
 
@@ -364,9 +374,9 @@ export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapse
       groups.push({ group, kids })
     }
     groups.forEach((g, i) => {
-      const kidsTotal = g.kids.reduce((s, k) => s + downW(k), 0) + GAP * (g.kids.length - 1)
+      const kidsTotal = g.kids.reduce((sum, k) => sum + downW(k), 0) + GAP * (g.kids.length - 1)
       const gw = Math.max(SEG_W, kidsTotal)
-      const segX = segmentX(unit, g.group.spouse)
+      const segX = segmentX(unit, g.group.spouse, s)
       let kidCursor = Math.max(positions[i], segX - kidsTotal / 2)
       const maxStart = positions[i] + gw - kidsTotal
       if (kidCursor > maxStart) kidCursor = maxStart
@@ -545,7 +555,7 @@ export function buildAnchoredLayout(structure, homeId, upCollapsed, downCollapse
   let maxY = 0
   for (const u of placedUnits) {
     maxX = Math.max(maxX, u.x + u.w)
-    maxY = Math.max(maxY, u.y + NODE_H)
+    maxY = Math.max(maxY, u.y + s.NODE_H)
   }
 
   return {
