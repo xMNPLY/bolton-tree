@@ -388,7 +388,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
 
   const onPointerDown = (e) => {
     if (e.button !== 0 && e.button !== 1) return
-    if (e.target.closest && (e.target.closest(".tree-toolbar") || e.target.closest(".expand-bubble"))) return
+    if (e.target.closest && (e.target.closest(".tree-toolbar") || e.target.closest(".zoom-controls") || e.target.closest(".expand-bubble"))) return
     e.preventDefault()
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointers.current.size === 1) {
@@ -491,12 +491,6 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
     <div className="tree-wrap" ref={containerRef} onPointerDown={onPointerDown}>
       <div className="tree-toolbar">
         <span className="tree-hint">Scroll or pinch to zoom · drag to pan · click a card to select · + opens older generations</span>
-        <div className="zoom-controls">
-          <button onClick={() => zoomAt(1.3)} title="Zoom in">+</button>
-          <button onClick={() => zoomAt(1 / 1.3)} title="Zoom out">−</button>
-          <button onClick={fitToView} title="Fit to screen">⤢</button>
-          <button onClick={() => setTransform(clamp({ x: 24, y: 24, k: 1 }))} title="Reset view">⟲</button>
-        </div>
       </div>
       <svg
         ref={svgRef}
@@ -672,6 +666,12 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
           </g>
         ))}
       </svg>
+      <div className="zoom-controls">
+        <button onClick={() => zoomAt(1.3)} title="Zoom in">+</button>
+        <button onClick={() => zoomAt(1 / 1.3)} title="Zoom out">−</button>
+        <button onClick={fitToView} title="Fit to screen">⤢</button>
+        <button onClick={() => setTransform(clamp({ x: 24, y: 24, k: 1 }))} title="Reset view">⟲</button>
+      </div>
     </div>
   )
 }

@@ -35,6 +35,8 @@
 body {
   margin: 0;
   min-height: 100svh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
 }
 
 #root {
@@ -52,6 +54,7 @@ button {
   display: flex;
   flex-direction: column;
   height: 100svh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -259,6 +262,15 @@ button {
   flex: 1;
   min-height: 0;
   position: relative;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 35, 25, 0.28);
+  z-index: 35;
+  animation: fadeIn 0.15s ease;
 }
 
 .layout.sidebar-closed {
@@ -958,6 +970,7 @@ img.avatar {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  position: relative;
   touch-action: none;
   background:
     radial-gradient(rgba(63, 98, 72, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
@@ -967,41 +980,53 @@ img.avatar {
 .tree-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 7px 16px;
   border-bottom: 1px solid var(--border);
-  background: var(--card);
+  background: rgba(251, 248, 241, 0.85);
+  backdrop-filter: blur(4px);
   z-index: 10;
 }
 
 .tree-hint {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-muted);
+  letter-spacing: 0.2px;
 }
 
 .zoom-controls {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 20;
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px;
+  box-shadow: var(--shadow);
 }
 
 .zoom-controls button {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 19px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.12s;
 }
 
 .zoom-controls button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .tree-svg {
@@ -1024,21 +1049,22 @@ img.avatar {
 }
 
 .tree-node .node-bg {
-  fill: var(--card);
-  stroke: var(--border-strong);
-  stroke-width: 1.5;
+  fill: #fffefb;
+  stroke: #ded7c8;
+  stroke-width: 1.2;
+  filter: drop-shadow(0 1.5px 2px rgba(62, 53, 33, 0.12));
   transition: stroke 0.12s, fill 0.12s;
 }
 
 .tree-node:hover .node-bg {
   stroke: var(--accent);
-  fill: #fff;
+  fill: #ffffff;
 }
 
 .tree-node.selected .node-bg {
   stroke: var(--accent);
-  stroke-width: 2.5;
-  fill: #fff;
+  stroke-width: 2.4;
+  fill: #ffffff;
 }
 
 .node-accent {
@@ -1055,14 +1081,16 @@ img.avatar {
 
 .node-name {
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
   fill: var(--heading);
   font-family: var(--serif);
+  pointer-events: none;
 }
 
 .node-years {
   font-size: 12px;
   fill: var(--text-muted);
+  pointer-events: none;
 }
 
 /* ---------- Modal ---------- */
@@ -1140,21 +1168,41 @@ img.avatar {
   }
 
   .topbar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     padding: 8px 10px;
   }
 
+  .brand {
+    font-size: 16px;
+    gap: 6px;
+  }
+
+  .brand svg {
+    width: 18px;
+    height: 18px;
+  }
+
   .top-tabs {
-    margin-left: 0;
+    margin-left: auto;
+  }
+
+  .top-tabs button {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 
   .file-meta {
-    margin-left: 0;
+    display: none;
+  }
+
+  .topbar .btn-label {
+    display: none;
   }
 
   .layout {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .layout.sidebar-closed {
@@ -1174,14 +1222,24 @@ img.avatar {
     max-height: none;
     z-index: 40;
     border-right: 1px solid var(--border);
-    box-shadow: 4px 0 24px rgba(40, 35, 25, 0.18);
+    border-radius: 0 18px 18px 0;
+    box-shadow: 8px 0 32px rgba(40, 35, 25, 0.22);
     transform: translateX(0);
-    transition: transform 0.2s ease;
+    transition: transform 0.22s ease;
   }
 
   .layout.sidebar-closed .sidebar {
     display: flex;
-    transform: translateX(-105%);
+    transform: translateX(-110%);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(40, 35, 25, 0.28);
+    z-index: 35;
+    animation: fadeIn 0.15s ease;
   }
 
   .sidebar-arrow {
@@ -1189,7 +1247,7 @@ img.avatar {
     top: 50%;
     left: min(85vw, 320px);
     z-index: 50;
-    transition: left 0.2s ease;
+    transition: left 0.22s ease;
   }
 
   .layout.sidebar-closed .sidebar-arrow {
@@ -1208,21 +1266,28 @@ img.avatar {
   }
 
   .pane {
-    padding: 16px 14px 32px;
+    padding: 14px 12px 28px;
   }
 
   .tree-toolbar {
-    flex-wrap: wrap;
-    gap: 6px;
+    display: none;
+  }
+
+  .zoom-controls {
+    right: 10px;
+    bottom: 10px;
   }
 
   .zoom-controls button {
-    width: 38px;
-    height: 38px;
-    font-size: 17px;
+    width: 42px;
+    height: 42px;
   }
 
   .gallery-grid {
     grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+
+  .detail h3 {
+    letter-spacing: 1px;
   }
 }

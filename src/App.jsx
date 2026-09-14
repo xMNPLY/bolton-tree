@@ -13,7 +13,7 @@ export default function App() {
   const [homeId, setHomeId] = useState(null)
   const [tab, setTab] = useState("tree")
   const [showUpload, setShowUpload] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768)
   const [focus, setFocus] = useState({ id: null, nonce: 0 })
 
   const handleLoad = useCallback((text, name) => {
@@ -99,7 +99,7 @@ export default function App() {
           </span>
         </div>
         <button className="btn ghost small" onClick={() => setShowUpload(true)}>
-          Load another file
+          <span className="btn-label">Load another file</span>
         </button>
       </header>
 
@@ -115,6 +115,9 @@ export default function App() {
       )}
 
       <div className={`layout ${sidebarOpen ? "" : "sidebar-closed"}`}>
+        {sidebarOpen && (
+          <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+        )}
         <button
           className="sidebar-arrow"
           onClick={() => setSidebarOpen((o) => !o)}
