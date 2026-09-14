@@ -30,8 +30,8 @@ function PersonCard({ person, x, y, selected, onSelect, s }) {
   const avatarR = compact ? NODE_H / 2 - 2 : NODE_H / 2 - 6
   const avatarCx = compact ? 0 : NODE_H / 2
   const textX = compact ? 6 : NODE_H + 10
-  const nameSize = compact ? NODE_H - 4 : medium ? 12.5 : 13.5
-  const yearsSize = compact ? 0 : 11.5
+  const nameSize = compact ? 13 : medium ? 12 : 13
+  const yearsSize = compact ? 0 : 11
 
   return (
     <g
@@ -129,6 +129,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
 
   const band = bandForZoom(transform.k)
   const s = SIZE_BANDS[band.key]
+  const compact = band.key === "compact"
   const { NODE_H } = s
 
   const structure = useMemo(
@@ -664,7 +665,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
                     }
                   }}
                 >
-                  <circle r="11" />
+                  <circle r={compact ? 9 : 11} />
                   <text y="4.5" textAnchor="middle">{upCollapsed.has(memberKey) ? "+" : "−"}</text>
                 </g>
               )
@@ -686,7 +687,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
                   }
                 }}
               >
-                <circle r="11" />
+                <circle r={compact ? 9 : 11} />
                 <text y="4.5" textAnchor="middle">{downCollapsed.has(u.key) ? "+" : "−"}</text>
               </g>
             )}
