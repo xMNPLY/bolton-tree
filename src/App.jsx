@@ -33,7 +33,7 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
-    fetch("/family.ged")
+    fetch("./family.ged")
       .then((res) => {
         if (!res.ok) throw new Error("no family file")
         return res.text()
