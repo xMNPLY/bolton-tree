@@ -788,19 +788,20 @@ button {
 
 .expand-bubble circle {
   fill: var(--card);
-  stroke: var(--accent);
-  stroke-width: 2;
+  stroke: var(--border-strong);
+  stroke-width: 1;
   transition: fill 0.12s;
 }
 
 .expand-bubble:hover circle {
   fill: var(--accent-soft);
+  stroke: var(--accent);
 }
 
 .expand-bubble text {
-  font-size: 15px;
-  font-weight: 700;
-  fill: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-muted);
   pointer-events: none;
 }
 
@@ -1092,10 +1093,10 @@ img.avatar {
 }
 
 .node-name {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   fill: var(--heading);
-  font-family: var(--serif);
+  font-family: var(--sans);
   pointer-events: none;
 }
 

@@ -27,6 +27,8 @@ function PersonCard({ person, x, y, selected, onSelect, s }) {
   const firstName = (person.name || "?").split(" ")[0]
   const compact = band === "compact"
   const medium = band === "medium"
+  const maxChars = compact ? 9 : medium ? 15 : 17
+  const trunc = (str) => (str.length > maxChars ? str.slice(0, maxChars - 1) + "…" : str)
   const avatarR = compact ? NODE_H / 2 - 2 : NODE_H / 2 - 6
   const avatarCx = compact ? 0 : NODE_H / 2
   const textX = compact ? 6 : NODE_H + 10
@@ -82,7 +84,7 @@ function PersonCard({ person, x, y, selected, onSelect, s }) {
         className="node-name"
         style={{ fontSize: nameSize }}
       >
-        {compact ? firstName : person.name || "(Unknown)"}
+        {trunc(compact ? firstName : person.name || "(Unknown)")}
       </text>
       {years && !compact && !medium && (
         <text x={textX} y={NODE_H / 2 + 10.5} className="node-years" style={{ fontSize: yearsSize }}>
@@ -106,8 +108,9 @@ function downEdgePath(parent, child, spouse, s) {
 }
 
 function upEdgePath(parent, child, memberId, s) {
+  void memberId
   const p = { x: parent.x + parent.w / 2, y: parent.y + s.NODE_H }
-  const c = { x: memberCardX(child, memberId, s), y: child.y }
+  const c = { x: child.x + child.w / 2, y: child.y }
   const mid = p.y + (c.y - p.y) / 2
   return `M ${p.x} ${p.y} C ${p.x} ${mid}, ${c.x} ${mid}, ${c.x} ${c.y}`
 }
@@ -243,6 +246,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
   }, [fitK, clamp])
 
   const homeUnit = layout.home
+  void homeUnit
   const initialViewDone = useRef(false)
 
   useEffect(() => {
@@ -250,16 +254,11 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
       if (initialViewDone.current) return
       initialViewDone.current = true
       const el = containerRef.current
-      if (!el || !homeUnit) return
-      const k = 1
-      setTransform(clamp({
-        k,
-        x: el.clientWidth / 2 - (homeUnit.x + homeUnit.w / 2) * k,
-        y: el.clientHeight / 2 - (homeUnit.y + NODE_H / 2) * k,
-      }))
+      if (!el || !layout.units.length) return
+      setTransform(clamp({ k: fitK(), x: 24, y: 24 }))
     })
     return () => cancelAnimationFrame(raf)
-  }, [clamp, homeUnit, NODE_H])
+  }, [clamp, fitK, layout])
 
   const pendingPan = useRef(null)
 
@@ -536,10 +535,10 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
             key={`se${i}`}
             d={upEdgePath(e.parent, e.child, e.memberId, s)}
             fill="none"
-            stroke="#d9a441"
-            strokeWidth="1.5"
-            strokeDasharray="6 5"
-            opacity="0.85"
+            stroke="#c9c4b8"
+            strokeWidth="1"
+            strokeDasharray="3 5"
+            opacity="0.5"
           />
         ))}
         {upEdges.map((e, i) => (
@@ -547,8 +546,8 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
             key={`ue${i}`}
             d={upEdgePath(e.parent, e.child, e.memberId, s)}
             fill="none"
-            stroke="#b9c4b2"
-            strokeWidth="2"
+            stroke="#a9b8a4"
+            strokeWidth="1.5"
           />
         ))}
         {edges.map((e, i) => (
@@ -556,8 +555,8 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
             key={`e${i}`}
             d={downEdgePath(e.parent, e.child, e.spouse, s)}
             fill="none"
-            stroke="#8aa88e"
-            strokeWidth="2"
+            stroke="#a9b8a4"
+            strokeWidth="1.5"
           />
         ))}
         {spouseLinks.map((u) => (
@@ -568,8 +567,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
             x2={u.x + s.NODE_W + s.COUPLE_GAP}
             y2={u.y + NODE_H / 2}
             stroke="#c9a27a"
-            strokeWidth="2.5"
-            strokeDasharray="5 4"
+            strokeWidth="1.5"
           />
         ))}
         {multiLinks.map((u) =>
@@ -665,7 +663,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
                     }
                   }}
                 >
-                  <circle r={compact ? 9 : 11} />
+                  <circle r={compact ? 7 : 8} />
                   <text y="4.5" textAnchor="middle">{upCollapsed.has(memberKey) ? "+" : "−"}</text>
                 </g>
               )
@@ -687,7 +685,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
                   }
                 }}
               >
-                <circle r={compact ? 9 : 11} />
+                <circle r={compact ? 7 : 8} />
                 <text y="4.5" textAnchor="middle">{downCollapsed.has(u.key) ? "+" : "−"}</text>
               </g>
             )}

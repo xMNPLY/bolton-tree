@@ -1,7 +1,7 @@
 export const SIZE_BANDS = {
-  detailed: { key: "detailed", NODE_W: 176, NODE_H: 56, COUPLE_GAP: 18, ROW: 118, GAP: 16, SEG_W: 370 },
-  medium: { key: "medium", NODE_W: 128, NODE_H: 40, COUPLE_GAP: 12, ROW: 74, GAP: 12, SEG_W: 268 },
-  compact: { key: "compact", NODE_W: 88, NODE_H: 24, COUPLE_GAP: 8, ROW: 46, GAP: 8, SEG_W: 184 },
+  detailed: { key: "detailed", NODE_W: 176, NODE_H: 56, COUPLE_GAP: 18, ROW: 118, GAP: 8, SEG_W: 370 },
+  medium: { key: "medium", NODE_W: 128, NODE_H: 40, COUPLE_GAP: 12, ROW: 74, GAP: 8, SEG_W: 268 },
+  compact: { key: "compact", NODE_W: 88, NODE_H: 24, COUPLE_GAP: 8, ROW: 46, GAP: 6, SEG_W: 184 },
 }
 
 export function bandForZoom(k) {
