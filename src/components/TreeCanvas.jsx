@@ -176,6 +176,21 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
     return { unitKey: rest.slice(0, i), memberId: rest.slice(i + 1) }
   }
 
+  const pendingAnchor = useRef(null)
+
+  const anchorUnit = (unitKey) => {
+    const unit = layout.byKey.get(unitKey)
+    const el = containerRef.current
+    if (!unit || !el) return
+    const k = transformRef.current.k
+    pendingAnchor.current = {
+      unitKey,
+      sx: transformRef.current.x + (unit.x + unit.w / 2) * k,
+      sy: transformRef.current.y + (unit.y + NODE_H / 2) * k,
+      k,
+    }
+  }
+
   const toggleUp = (key) => {
     const { unitKey, memberId } = parseUpKey(key)
     const group = (structure.upGroupsOf.get(unitKey) || []).find((g) => g.memberId === memberId)
@@ -188,11 +203,13 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
       if (expanding) nextDown.delete(p.key)
       else nextDown.add(p.key)
     }
+    anchorUnit(unitKey)
     setUpCollapsed(nextUp)
     setDownCollapsed(nextDown)
   }
 
   const toggleDown = (key) => {
+    anchorUnit(key)
     setDownCollapsed((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
@@ -334,6 +351,7 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
 
     setUpCollapsed(nextUp)
     setDownCollapsed(nextDown)
+    pendingAnchor.current = null
     pendingPan.current = id
   }, [structure, homeId, upCollapsed, downCollapsed])
 
@@ -365,6 +383,19 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
     }
   }, [layout, clamp, NODE_H])
 
+  useEffect(() => {
+    if (!pendingAnchor.current) return
+    const a = pendingAnchor.current
+    pendingAnchor.current = null
+    const unit = layout.byKey.get(a.unitKey)
+    if (!unit) return
+    setTransform({
+      k: a.k,
+      x: a.sx - (unit.x + unit.w / 2) * a.k,
+      y: a.sy - (unit.y + NODE_H / 2) * a.k,
+    })
+  }, [layout, NODE_H])
+
   const zoomAt = (factor, cx, cy) => {
     const el = containerRef.current
     const px = cx ?? (el ? el.clientWidth / 2 : 0)
@@ -372,11 +403,11 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
     setTransform((t) => {
       const k = Math.min(K_MAX, Math.max(K_MIN, t.k * factor))
       const ratio = k / t.k
-      return clamp({
+      return {
         k,
         x: px - ratio * (px - t.x),
         y: py - ratio * (py - t.y),
-      })
+      }
     })
   }
 
@@ -422,13 +453,11 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
       if (g.mode === "pan") {
         const p = pointers.current.values().next().value
         if (!p) return
-        setTransform((t) =>
-          clamp({
-            ...t,
-            x: g.tx + (p.x - g.sx),
-            y: g.ty + (p.y - g.sy),
-          })
-        )
+        setTransform((t) => ({
+          ...t,
+          x: g.tx + (p.x - g.sx),
+          y: g.ty + (p.y - g.sy),
+        }))
       } else if (g.mode === "pinch") {
         const pts = [...pointers.current.values()]
         if (pts.length < 2) return
@@ -441,13 +470,11 @@ export default function TreeCanvas({ individuals, families, homeId, selectedId, 
         const k = Math.min(K_MAX, Math.max(K_MIN, g.k * ratio))
         const px = mx - el.getBoundingClientRect().left
         const py = my - el.getBoundingClientRect().top
-        setTransform(
-          clamp({
-            k,
-            x: px - (k / g.k) * (px - g.tx),
-            y: py - (k / g.k) * (py - g.ty),
-          })
-        )
+        setTransform({
+          k,
+          x: px - (k / g.k) * (px - g.tx),
+          y: py - (k / g.k) * (py - g.ty),
+        })
       }
     }
     const onMove = (e) => {
